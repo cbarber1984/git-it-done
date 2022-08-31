@@ -1,6 +1,10 @@
+var repoNameEl = document.querySelector("#repo-name");
 var issueContainerEl = document.querySelector("#issues-container");
+var limitWarningEl = document.querySelector("#limit-warning");
+
 
 var getRepoIssues = function(repo) {
+    // format the GitHub api url
     var apiUrl = "https://api.github.com/repos/" + repo + "/issues?direction=asc";
 
     fetch(apiUrl).then(function(response) {
@@ -9,8 +13,14 @@ var getRepoIssues = function(repo) {
             response.json().then(function(data) {
                 // pass response data to dom function
                 displayIssues(data);
+
+                // check if api has paginated issues
+                if (response.headers.get("Link")) {
+                    displayWarning(repo);
+                }
             });
         } else {
+            console.log(response);
             alert("There was a problem with your request!")
         }
     });
@@ -26,7 +36,8 @@ var displayIssues = function(issues) {
     
     // loop over response data to create <a> element for each issue
     for (let i = 0; i < issues.length; i++) {
-        let issueEl = document.createElement("a");
+        // create a link element to take users to the issue on GitHub
+        var issueEl = document.createElement("a");
         issueEl.classList = "list-item flex-row justify-space-between align-center";
         issueEl.setAttribute("href", issues[i].html_url);
         issueEl.setAttribute("target", "_blank");
@@ -52,6 +63,18 @@ var displayIssues = function(issues) {
         issueEl.appendChild(typeEl);
         issueContainerEl.appendChild(issueEl);
     }
-}
+};
 
-getRepoIssues("cbarber1984/run-buddy");
+var displayWarning = function(repo) {
+    // add text to warning container
+    limitWarningEl.textContent = "To see more than 30 issues, visit ";
+    var repoLinkEl = document.createElement("a");
+    repoLinkEl.textContent = "See More Issues on GitHub.com"
+    repoLinkEl.setAttribute("href", "https://github/" + repo + "/issues");
+    repoLinkEl.setAttribute("target", "_blank");
+
+    //append to warning container
+    limitWarningEl.appendChild(repoLinkEl);
+};
+
+getRepoIssues("facebook/react");
